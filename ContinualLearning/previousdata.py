@@ -48,7 +48,7 @@ class previousdata:
             for indexitem,loss in enumerate(lossdata):#to the loss part
                 #print(len(loss))
                 #print(indexitem)
-                floss=loss.mean()#************kalau mau update perhitungan lossnya
+                floss=loss.mean()
                 #if(floss<meanloss):
                 dataLoss.append([dataxy[indexitem],datafu[indexitem],dataneigh[indexitem],floss])
         return dataLoss
@@ -78,7 +78,7 @@ class previousdata:
             temptransposey=np.transpose(temp[1], (1, 0, 2)).tolist()
             temptransposen=np.transpose(temp[2], (1, 0, 2, 3)).tolist()
             if(idx==0):    
-                tempx=temptransposex#ini isinya masih banyak jadi mbending di loop aja
+                tempx=temptransposex
                 tempy=temptransposey
                 tempn=temptransposen
             else:
@@ -89,7 +89,7 @@ class previousdata:
         print('filtered replay!!!')
         sample=int((sample/100)*tempx.shape[0])
         print('sample=',sample)
-         #random_samples = random.choices(prevtestdata,weights=yt,k=sample)#salahnya disini ketmu, jadi harusnya yang dipilih itu dari anggota prevtestdata
+         #random_samples = random.choices(prevtestdata,weights=yt,k=sample)
         random_indices = np.random.choice(tempx.shape[0], size=sample, replace=False)
         #random_indices=range(tempx.shape[0])
         result=[]
@@ -105,10 +105,6 @@ class previousdata:
             result.append(perdata)
         return result
     def __filterADExreplay(self, prevvalid,sample):
-        #digunakan untuk filter validation data menggunakan random sebanyak sample
-        #input : previous validation data
-        #output: data validasinya yang sudah difilter diikuti dengan nilai ade dasarnya, [history,future,neighbour,losscore], untuk perbandingannya mungkin lebih mudah menggunakan nilai mean
-        
         dataADEFDE=[]
         prevvalid,bestade,besfde=prevvalid
         #sample=int((sample/100)*len(prevvalid))
@@ -129,9 +125,6 @@ class previousdata:
                      #dataTrainloss.append(batchitem)
         return dataADEFDE
     def __filterLoss(self, prevtraining):
-        #digunakan untuk sampling nilai lossnya menggunakan minimum loss
-        #input : previous training data with loss score
-        #output: data trainingnya yang sudah difilter dalam bentuk numpy aja
         yt= prevtraining[3]
         #s=self.sample
         if(self.method!="experiencereplay"):
@@ -159,28 +152,11 @@ class previousdata:
         traindata6=prevtraining[6][indices]
         traindata7=prevtraining[7][indices]
         dataLoss=[traindata0,traindata1,traindata2,traindata3,traindata4,traindata5,traindata6,traindata7]
-
-        # for indexbatch,batchitem in enumerate(prevtraining):
-        #     #print(indexbatch)
-        #     #lossdata=batchitem[1][0].permute(1,0,2).squeeze(1)
-        #     dataxy=batchitem[0].permute(1,0,2)
-        #     datafu=batchitem[1].permute(1,0,2)
-        #     dataneigh=batchitem[2].permute(1, 2, 0, 3)
-        #     for indexitem,loss in enumerate(lossdata):#to the loss part
-        #         #print(len(loss))
-        #         #print(indexitem)
-        #         floss=loss.mean()#************kalau mau update perhitungan lossnya
-        #         if(floss<meanloss):
-        #             dataLoss.append([dataxy[indexitem],datafu[indexitem],dataneigh[indexitem],floss])
         return dataLoss
     def __filterProposedLoss(self, prevtraining):
         dataLoss=prevtraining#[prevtraining[0],prevtraining[1],prevtraining[2],prevtraining[3],prevtraining[4],prevtraining[5],prevtraining[6],prevtraining[7]]
         return dataLoss
     def __filterADE(self, prevvalid):
-        #digunakan untuk filter validation data menggunakan minimum ADE
-        #input : previous validation data
-        #output: data validasinya yang sudah difilter diikuti dengan nilai ade dasarnya, [history,future,neighbour,losscore], untuk perbandingannya mungkin lebih mudah menggunakan nilai mean
-        
         dataADEFDE=[]
         prevvalid,bestade,besfde=prevvalid
             # if(batchitem[3].mean()<self.lossthreshold):
@@ -206,10 +182,6 @@ class previousdata:
                      #dataTrainloss.append(batchitem)
         return dataADEFDE
     def __filterADEREL(self, prevvalid):
-        #digunakan untuk filter validation data menggunakan minimum ADE
-        #input : previous validation data
-        #output: data validasinya yang sudah difilter diikuti dengan nilai ade dasarnya, [history,future,neighbour,losscore], untuk perbandingannya mungkin lebih mudah menggunakan nilai mean
-        
         dataADEFDE=[]
         prevvalid,bestade,besfde=prevvalid
             # if(batchitem[3].mean()<self.lossthreshold):
@@ -238,23 +210,7 @@ class previousdata:
         dataLoss=[prevtraining[0],prevtraining[1],prevtraining[2],prevtraining[3],prevtraining[4],prevtraining[5],prevtraining[6],prevtraining[7],prevtraining[8]]
         return dataLoss
     def __filterReLoss(self, prevtraining):
-        #digunakan untuk sampling nilai lossnya menggunakan minimum loss
-        #input : previous training data with loss score
-        #output: data trainingnya yang sudah difilter dalam bentuk numpy aja
         dataLoss=[prevtraining[0],prevtraining[1],prevtraining[2],prevtraining[3],prevtraining[4],prevtraining[5],prevtraining[6],prevtraining[7],prevtraining[8]]
-
-        # for indexbatch,batchitem in enumerate(prevtraining):
-        #     #print(indexbatch)
-        #     #lossdata=batchitem[1][0].permute(1,0,2).squeeze(1)
-        #     dataxy=batchitem[0].permute(1,0,2)
-        #     datafu=batchitem[1].permute(1,0,2)
-        #     dataneigh=batchitem[2].permute(1, 2, 0, 3)
-        #     for indexitem,loss in enumerate(lossdata):#to the loss part
-        #         #print(len(loss))
-        #         #print(indexitem)
-        #         floss=loss.mean()#************kalau mau update perhitungan lossnya
-        #         if(floss<meanloss):
-        #             dataLoss.append([dataxy[indexitem],datafu[indexitem],dataneigh[indexitem],floss])
         return dataLoss
 #moif get dataclusternya dulu ciiin buwat average score ajee
 if __name__ == "__main__":
@@ -267,8 +223,4 @@ if __name__ == "__main__":
     bestaddress=os.path.join("log_eth/sandboxlogExReplay7/memorybuffer", "longterm2.pt")  
     torch.save(longterm_memory, bestaddress)
 
-#masalah dengan augmentasinya gmn hayoooo
-#yuk filter yuk 
-#print(loaded_tensorloss)
-#hilangkan augmentasinya ajaa cuyyyyyyyyyyyyyyyy
 
