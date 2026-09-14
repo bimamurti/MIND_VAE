@@ -61,6 +61,10 @@ Scripts in `graph/` can be used for visualization and analysis. Typical steps:
 1. Set `best_loss` to point to the `best_loss.pt` generated during training.
 2. Provide the appropriate `--method-artifact` (e.g., `best_bcsr.pt`, `best_rel.pt`, or `bestCandidate.pt` for MIND).
 
+**Data**
+--------
+The data is not uploaded yet since it required big spaces, the data use the MOT dataset format (separated by space) and store in folder 'data'. the data should consist of 3 main folder which is eval,test,train.
+
 Appendix
 --------
 Additional experimental details are available in [ICRA27-Appendix.pdf](ICRA27-Appendix.pdf).
