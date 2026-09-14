@@ -841,8 +841,3 @@ if __name__ == '__main__':
     #RELexperienceReplay()
     #ProposedexperienceReplay()
     #filteredexperienceReplay()
-    #print(evaluation())
-    #prepare the dataset and just kill them all!!
-    #pakai dataset dari german sama buat MOT214 yang durasi panjang!
-    #kemudian rocknroll pakai data cluster buat : 
-    #buatscenebaseexperience replay tanpa ada embel embel filter!
