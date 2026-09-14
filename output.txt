@@ -1,0 +1,2 @@
+task: task4
+evaluation: {'evaluationtask': 'task4', 'ADE': tensor(23.7541, device='cuda:0'), 'FDE': tensor(45.9698, device='cuda:0')}

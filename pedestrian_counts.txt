@@ -1,0 +1,48 @@
+PEDESTRIAN COUNT STATISTICS
+====================================================================================================
+
+Dataset: duri_morning_world
+  Total frames: 3200
+  Total unique agents: 873
+  Average pedestrians per frame: 90.31
+  Std dev: 9.43
+  Min: 48
+  Max: 112
+  Median: 92.00
+
+Dataset: duri_evening_world
+  Total frames: 3300
+  Total unique agents: 841
+  Average pedestrians per frame: 60.64
+  Std dev: 11.29
+  Min: 37
+  Max: 89
+  Median: 59.00
+
+Dataset: vredeburg_world
+  Total frames: 3200
+  Total unique agents: 660
+  Average pedestrians per frame: 107.61
+  Std dev: 30.34
+  Min: 55
+  Max: 163
+  Median: 112.00
+
+Dataset: duri_platform1_world
+  Total frames: 3512
+  Total unique agents: 997
+  Average pedestrians per frame: 130.08
+  Std dev: 23.52
+  Min: 75
+  Max: 166
+  Median: 139.00
+
+Dataset: paisley_world
+  Total frames: 3010
+  Total unique agents: 916
+  Average pedestrians per frame: 279.43
+  Std dev: 26.63
+  Min: 217
+  Max: 321
+  Median: 288.00
+
