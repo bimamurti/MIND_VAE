@@ -123,8 +123,7 @@ if __name__ == "__main__":
         test_dataset= Dataloader(
             settings.test, **kwargs,inclusive_groups=inclusive,idtask=int(settings.taskno),
             batch_size=config.BATCH_SIZE, shuffle=False, kneighbour=config.MAX_NEIGHBORS
-        )#disini tidak spesifik ditentukan batch per epochnya makanya di evaluasi semuanya
-        #sekarang tambahkan di data XY yang disimpan idtrack dan idtask, clusternya jg
+        )
         if settings.prev_data!=None:
             sample=int(settings.datacapacity)#iniiiii pentingggg!!!!
             allprevdata=loadallpreviousmemories(settings.prev_data)
@@ -133,10 +132,8 @@ if __name__ == "__main__":
                 filterpreviousdata=previousdata(sample,settings.method)
                 filterpreviousdata.getProposedData(prev_data[1],prev_data[0])
                 prevtestdata=filterpreviousdata.dataprevvalid
-                test_dataset=mergeprevioustestdata(test_dataset,prevtestdata)#brati prevtestdata isinya per scene
-                #coba langsung cek bagian ini lgs run di mainreducible dengan ditambahin bagian prev data
-            #test_dataset=test_dataset.extend(prevtestdata)
-            #harusnya ditambahkan ke test_data karena dah disampler, ternyta ga usah karena dipakai semua
+                test_dataset=mergeprevioustestdata(test_dataset,prevtestdata)
+
         test_data = torch.utils.data.DataLoader(test_dataset, 
             collate_fn=test_dataset.collate_fnscore,
             batch_sampler=test_dataset.batch_sampler
@@ -303,8 +300,6 @@ if __name__ == "__main__":
             weight_lr=settings.weight_lr, logging_period=1000,device=settings.device)
     lastbatch=[]
     def reducethetrainingdata(train_data,train_dataset):
-        # fungsi untuk mengurangi data training dengan cara mengevaluasi data training dengan model yang sudah diload,
-        # data training akan diseleksi dengan multinomial berdasarkan nilai akurasi yang diturunkan dari error test.
         if train_data is None:
             return None
 
@@ -438,7 +433,7 @@ if __name__ == "__main__":
             #if settings.prev_data!=None:
             #    realtraindata=mergepreviousdatatraining(realtraindata,prevtrainingdata,sample)
             lossarray=[]
-            #dapat semua data, nah sekarang tinggal ditambahkan ke real traindata cuyyy uhuyyy!!! tambahkan aja di dataloadnya biar sama kayak test, tapi nanti jadi tidak tercontrol
+        
             nbatch=len(train_data)
             errindividuallist=[]
             klindividuallist=[]
@@ -455,7 +450,6 @@ if __name__ == "__main__":
                 #print(a)
                 if settings.prev_data!=None:
                     #sample=sample//nbatch#ini membagi sample per batch
-                    #masukan samplenya per batch disini
                     for prev_data in allprevdata:
                         sample=sample//len(allprevdata)
                         prevtrainingdata=filterpreviousdata.dataprevtrain
@@ -477,7 +471,7 @@ if __name__ == "__main__":
                 errindividual=res[0].mean(dim=(0,2))#ini loss per data, mean di ambil dari sample prediksi
                 klindividual=res[1].mean(dim=(0,2))
                 loss_err=errindividual+klindividual
-                loss = model.loss(*res)#err,kl di masukkan ke loss, dimana loss itu untuk 16 data per batch, jadi individual lossnya harus diambil dari res
+                loss = model.loss(*res)
                 item_cpu = tuple(t.clone().cpu() if torch.is_tensor(t) else t for t in item)
                 lossarray.append([item_cpu,errindividual.clone().cpu(),klindividual.clone().cpu(),torch.as_tensor(idtracks, dtype=torch.int, device='cpu'),torch.as_tensor(ncluster, dtype=torch.double, device='cpu'),torch.as_tensor(idtask, dtype=torch.int, device='cpu')])
                # lossarray.append([item,errindividual,klindividual,torch.as_tensor(idtracks, dtype=torch.int, device=settings.device),torch.as_tensor(ncluster, dtype=torch.double, device=settings.device),torch.as_tensor(taskno, dtype=torch.int, device=settings.device)])
@@ -492,8 +486,7 @@ if __name__ == "__main__":
                     if k not in losses: 
                         losses[k] = v.item()
                     else:
-                        losses[k] = (losses[k]*batch+v.item())/(batch+1)#ini akumulatif loss tiap batch untuk 1 epoch
-                        #cari average loss per datanya untuk kemudian dicari weightnya
+                        losses[k] = (losses[k]*batch+v.item())/(batch+1)
 
                 if(epoch==end_epoch):#ini tentukan kapan training coresetnya
                     print("run BCSR coreset selection!")
@@ -518,7 +511,7 @@ if __name__ == "__main__":
                     del item_cpu
                     torch.cuda.empty_cache()
                     gc.collect()
-                losslist.append(losses['loss'])#ini loss per epochnya, dimana batch itu isinya berbeda2
+                losslist.append(losses['loss'])
                 #rl.updatebuffer(items,loss_err,settings.taskno,idtracks,batch,epoch)
                 sys.stdout.write(log_str.format(
                     cur_batch=batch+1, done="="*int((batch+1)*progress),
@@ -607,8 +600,6 @@ if __name__ == "__main__":
                 #losslist=topk_values
                 #lossarray=lossarray[topk_sorted_idx]
                 #lossbest=lossarray.copy()
-                #buat filter berdasarkan individual loss untuk loss arraynya
-                #filter berdasarkan mean loss tiap individunya, cek perhitungan losslistnya
                 finalloss=[]
                 finalXY=[]
                 isnotempty=False
@@ -656,9 +647,9 @@ if __name__ == "__main__":
                         idtrajectory=torch.cat((finalXY[6],idtrajectory),dim=0)
                         idtask=torch.cat((finalXY[7],idtask),dim=0)
                         sample_count = adedata.shape[0]
-                        weightbcsr = torch.ones(sample_count, dtype=torch.float32, device=adedata.device) #buat weight bcsr bernilai 1 semua saja
-                        weightREL = torch.ones(sample_count, dtype=torch.float32, device=adedata.device) #buat weight REL bernilai 1 semua saja
-                        finalweight = torch.ones(sample_count, dtype=torch.float32, device=adedata.device) #buat weight final bernilai 1 semua saja
+                        weightbcsr = torch.ones(sample_count, dtype=torch.float32, device=adedata.device) 
+                        weightREL = torch.ones(sample_count, dtype=torch.float32, device=adedata.device)
+                        finalweight = torch.ones(sample_count, dtype=torch.float32, device=adedata.device)
                         finalXY=[obvdata,futdata,neighbdata,adedata,fdedata,clusterdata,idtrajectory,idtask,weightbcsr,weightREL,finalweight]
                 finalXY_cpu = [
                     t.detach().cpu().clone() if torch.is_tensor(t) else t
@@ -723,7 +714,6 @@ if __name__ == "__main__":
             max_mem=max_memtemp
         # Consume entries from the end so processed items can be freed immediately.
         loss_item = lossarray_rest.pop()
-        #ini digunakan untuk filter data training yang bagus dan yang enggak berdasarkan mean valuenya atau kalau saat ini msh menggunakan losslist-1
         #print('loss individu',lossarray[i][1])[i for i, val in enumerate(arr) if val < 5]
         #lossfinal=lossarray[i][1]<losslist[-1]
         #lossaray isinnya item,errindividual,klindividual,idtracks,ncluster,taskno
@@ -875,7 +865,6 @@ if __name__ == "__main__":
         for i in range(lastbatch_len):
             # Consume entries from the end so processed items can be freed immediately.
             last_item = lastbatchrest.pop()
-            #ini lossarray terakhir yang diambil
             # Use candidates_indices[i] for this specific batch, not flat_candidates (which has ALL batches)
             #batch_indices = torch.as_tensor(candidates_indices[i], device=settings.device)
             #batch_indices=candidates_indices[i]
@@ -1016,4 +1005,3 @@ if __name__ == "__main__":
     print("ckpt-best time taken (s):",endtimemain-time_best)
     
     print(f"Peak GPU memory allocated: {max_mem / 1024**2:.2f} MB")
-    #cekdatacapacity!!!
