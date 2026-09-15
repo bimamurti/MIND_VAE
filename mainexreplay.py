@@ -119,8 +119,7 @@ if __name__ == "__main__":
         test_dataset= Dataloader(
             settings.test, **kwargs,inclusive_groups=inclusive,idtask=int(settings.taskno),
             batch_size=config.BATCH_SIZE, shuffle=False
-        )#disini tidak spesifik ditentukan batch per epochnya makanya di evaluasi semuanya
-        #sekarang tambahkan di data XY yang disimpan idtrack dan idtask, clusternya jg
+        )
         if settings.prev_data!=None:
             sample=int(settings.datacapacity)#iniiiii pentingggg!!!!
             allprevdata=loadallpreviousmemories(settings.prev_data)
@@ -129,10 +128,8 @@ if __name__ == "__main__":
                 filterpreviousdata=previousdata(sample,settings.method)
                 filterpreviousdata.getexData(prev_data[1],prev_data[0])
                 prevtestdata=filterpreviousdata.dataprevvalid
-                test_dataset=mergeprevioustestdataREL(test_dataset,prevtestdata)#brati prevtestdata isinya per scene
-                #coba langsung cek bagian ini lgs run di mainreducible dengan ditambahin bagian prev data
-            #test_dataset=test_dataset.extend(prevtestdata)
-            #harusnya ditambahkan ke test_data karena dah disampler, ternyta ga usah karena dipakai semua
+                test_dataset=mergeprevioustestdataREL(test_dataset,prevtestdata)
+
         test_data = torch.utils.data.DataLoader(test_dataset, 
             collate_fn=test_dataset.collate_fn,
             batch_sampler=test_dataset.batch_sampler
@@ -227,7 +224,7 @@ if __name__ == "__main__":
         if settings.prev_data!=None:
             #merge both train data and previous data
             #prevtrainingdata=prev_data[0].dataprevtrain
-            sample=int(settings.datacapacity)#iniiiii pentingggg!!!!
+            sample=int(settings.datacapacity)
             #test_dataset=mergepreviousdatatraining(train_data,prevtrainingdata,sample)
         #batches = train_dataset.batches_per_epoch
         max_memory_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
@@ -280,7 +277,7 @@ if __name__ == "__main__":
         optimizer.zero_grad()
     #print("get 3")
     #k=20
-    buffersize=int((int(settings.datacapacity)/100)*len(train_dataset.data))#int(settings.datacapacity)#harusnya presentase dari data training
+    buffersize=int((int(settings.datacapacity)/100)*len(train_dataset.data))#int(settings.datacapacity)
     #batch_size=config.BATCH_SIZE//(2**2)
     batch_size=int(config.BATCH_SIZE*0.7)
     #selectionparam=50
@@ -293,8 +290,7 @@ if __name__ == "__main__":
             max_outer_it=5, max_inner_it=5,
             weight_lr=settings.weight_lr, logging_period=1000,device=settings.device)
     def reducethetrainingdata(train_data,train_dataset):
-        # fungsi untuk mengurangi data training dengan cara mengevaluasi data training dengan model yang sudah diload,
-        # data training akan diseleksi dengan multinomial berdasarkan nilai akurasi yang diturunkan dari error test.
+
         if train_data is None:
             return None
 
@@ -455,25 +451,15 @@ if __name__ == "__main__":
                         idtask=items[-2]
                         
                 
-                # if(epoch==end_epoch):#ini tentukan kapan training coresetnya
-                #     if(batch==0):
-                #         endtimebcsr=time.time()
-                #     print('start coreset selection for batch ',batch+1,'/',int(nbatch))
-                #     ids,loss,weights=bc.coreset_select(model, item, task_id=0,  topk=int(config.BATCH_SIZE*(int(settings.datacapacity)/100)),out_loss=[],idt=idtracks)
-                #     rng_state = get_rng_state(settings.device)
-                #     candidates_indices.append(ids.cpu().numpy())
-                #     item_cpu = tuple(t.clone().cpu() if torch.is_tensor(t) else t for t in item)
-                #     lastbatch.append([item_cpu,errindividual.clone().cpu(),klindividual.clone().cpu(),torch.as_tensor(idtracks, dtype=torch.int, device='cpu'),torch.as_tensor(ncluster, dtype=torch.double, device='cpu'),torch.as_tensor(idtask, dtype=torch.int, device='cpu'),weights.clone().cpu()])
-                #     #print('coreset selection done for batch',batch )
-                res = model(*item)#ini returnnya err, kl , err itu selisih y sama y' cuman bukan loss total, model loss nya berbeda dengan err
+                res = model(*item)
                 
                 free, total = torch.cuda.mem_get_info(settings.device)
                 mem_used_MB = (total - free) / 1024 ** 2
                 #print('after model',mem_used_MB)
-                errindividual=res[0].mean(dim=(0,2))#ini loss per data, mean di ambil dari sample prediksi
+                errindividual=res[0].mean(dim=(0,2))
                 klindividual=res[1].mean(dim=(0,2))
                 loss_err=errindividual+klindividual
-                loss = model.loss(*res)#err,kl di masukkan ke loss, dimana loss itu untuk 16 data per batch, jadi individual lossnya harus diambil dari res
+                loss = model.loss(*res)
                 item_cpu = tuple(t.clone().cpu() if torch.is_tensor(t) else t for t in item)
                 lossarray.append([item_cpu,errindividual.clone().cpu(),klindividual.clone().cpu(),torch.as_tensor(idtracks, dtype=torch.int, device='cpu'),torch.as_tensor(ncluster, dtype=torch.double, device='cpu'),torch.as_tensor(idtask, dtype=torch.int, device='cpu'),torch.as_tensor(score, dtype=torch.int, device='cpu')])
                 #errindividuallist.append(errindividual)
@@ -487,7 +473,7 @@ if __name__ == "__main__":
                     if k not in losses: 
                         losses[k] = v.item()
                     else:
-                        losses[k] = (losses[k]*batch+v.item())/(batch+1)#ini akumulatif loss tiap batch untuk 1 epoch
+                        losses[k] = (losses[k]*batch+v.item())/(batch+1)
                         #cari average loss per datanya untuk kemudian dicari weightnya
                 #sys.stdout.write(log_str.format(
                 #    cur_batch=batch+1, done="="*int((batch+1)*progress),
@@ -502,16 +488,6 @@ if __name__ == "__main__":
                 ids=torch.randperm(len(idtracks))
                     #rl.selectcoresetdata(settings.taskno,model,bc,epoch)
                     #print('selected coreset data for task',settings.taskno)
-            #print()
-            # if(epoch==end_epoch):
-            # # Flatten candidate index arrays into a single 1D array
-            #     del bc.training_model_op.proxy_model
-            #     import gc, torch
-            #     gc.collect()
-            #     torch.cuda.empty_cache()
-            #     flat_candidates = np.concatenate([np.ravel(c) for c in candidates_indices]) if len(candidates_indices) > 0 else np.array([], dtype=int)
-            #     flat_candidates=torch.asarray(flat_candidates   ,device=settings.device)
-                #select_coreset(loader, task, model, flat_candidates, args, bc=our_bc)
             
         ###############################################################################
         #####                                                                    ######
@@ -615,10 +591,6 @@ if __name__ == "__main__":
                 #move_batch_to_device(lossarray, "cpu")
                 startuniform=time.time()
                 for i in range(len(lossarray)):
-                     #ini digunakan untuk filter data training yang bagus dan yang enggak berdasarkan mean valuenya atau kalau saat ini msh menggunakan losslist-1
-                    #print('loss individu',lossarray[i][1])[i for i, val in enumerate(arr) if val < 5]
-                    #lossfinal=lossarray[i][1]<losslist[-1]
-                    #masalahnya adalah filteringnya kadang kosong jadi kalau mau pakai ini makesure dibuat seperti diatas
                     # Use uniform random sampling instead of thresholding by last loss
                     # keep a fraction given by settings.datacapacity (percent)
                     num_samples = int(lossarray[i][1].numel())
@@ -707,4 +679,3 @@ if __name__ == "__main__":
     print("total time for choosing random permutation:",enduniform-startuniform)
     #print("total time reducible Loss:",endtimemainREL-endtimemain)
     print(f"Peak GPU memory allocated: {max_mem / 1024**2:.2f} MB")
-    ##berikutnya kerjakan multi tasknya yaa!!!!!
