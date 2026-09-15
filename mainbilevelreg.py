@@ -129,10 +129,8 @@ if __name__ == "__main__":
                 filterpreviousdata=previousdata(sample,settings.method)
                 filterpreviousdata.getRelData(prev_data[1],prev_data[0])
                 prevtestdata=filterpreviousdata.dataprevvalid
-                test_dataset=mergeprevioustestdataREL(test_dataset,prevtestdata)#brati prevtestdata isinya per scene
-                #coba langsung cek bagian ini lgs run di mainreducible dengan ditambahin bagian prev data
+                test_dataset=mergeprevioustestdataREL(test_dataset,prevtestdata)
             #test_dataset=test_dataset.extend(prevtestdata)
-            #harusnya ditambahkan ke test_data karena dah disampler, ternyta ga usah karena dipakai semua
         test_data = torch.utils.data.DataLoader(test_dataset, 
             collate_fn=test_dataset.collate_fn,
             batch_sampler=test_dataset.batch_sampler
@@ -183,8 +181,7 @@ if __name__ == "__main__":
                     XY.append(xy_entry)#salahnya disini harusnya cuma 1 saja ini diambil 9
             ADE = torch.cat(ADE)
             FDE = torch.cat(FDE)
-            #XY=torch.cat(XY)
-            #ADEnFDE di cat brati di gabungkan seluruh listnya ex:56x17 sehingga semua keluar dan bisa di mean
+
             if torch.is_tensor(config.WORLD_SCALE) or config.WORLD_SCALE != 1:
                 if not torch.is_tensor(config.WORLD_SCALE):
                     config.WORLD_SCALE = torch.as_tensor(config.WORLD_SCALE, device=ADE.device, dtype=ADE.dtype)
@@ -426,7 +423,6 @@ if __name__ == "__main__":
             #if settings.prev_data!=None:
             #    realtraindata=mergepreviousdatatraining(realtraindata,prevtrainingdata,sample)
             lossarray=[]
-            #dapat semua data, nah sekarang tinggal ditambahkan ke real traindata cuyyy uhuyyy!!! tambahkan aja di dataloadnya biar sama kayak test, tapi nanti jadi tidak tercontrol
             nbatch=len(train_data)
             errindividuallist=[]
             klindividuallist=[]
@@ -475,8 +471,7 @@ if __name__ == "__main__":
                     if k not in losses: 
                         losses[k] = v.item()
                     else:
-                        losses[k] = (losses[k]*batch+v.item())/(batch+1)#ini akumulatif loss tiap batch untuk 1 epoch
-                        #cari average loss per datanya untuk kemudian dicari weightnya
+                        losses[k] = (losses[k]*batch+v.item())/(batch+1)
                 if(epoch==end_epoch):#ini tentukan kapan training coresetnya
                     if(batch==0):
                         endtimebcsr=time.time()
@@ -737,4 +732,3 @@ if __name__ == "__main__":
     print("total time bcsr (s):",endtotal-endtimebcsr)
     print("total time bcsr selection (s):",endtotal-endbcsrselect)
     print(f"Peak GPU memory allocated: {max_mem / 1024**2:.2f} MB")
-    ##berikutnya kerjakan multi tasknya yaa!!!!!
