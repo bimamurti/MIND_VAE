@@ -61,12 +61,6 @@ if __name__ == "__main__":
         for folder in pt_folder:
             test_files = glob.glob(os.path.join(folder, "bestXY.pt"))
             train_files = glob.glob(os.path.join(folder, "bestloss.pt"))
-            #print(pt_files)
-           
-            
-                #torch.serialization.add_safe_globals([previousdata])
-                # check whether this file can be loaded; then fix the previous-data handling
-                # and create the filter there instead of in the merge function
             if(len(test_files)>0):
                 test=torch.load(test_files[0])#,weights_only=False)
                 train=torch.load(train_files[0])
@@ -180,11 +174,9 @@ if __name__ == "__main__":
                         fde = torch.min(fde, dim=0)[0]
                     ADE.append(ade)
                     FDE.append(fde)
-                    XY.append([x,y,neighbor,ade,fde])#salahnya disini harusnya cuma 1 saja ini diambil 9
+                    XY.append([x,y,neighbor,ade,fde])
             ADE = torch.cat(ADE)
             FDE = torch.cat(FDE)
-            #XY=torch.cat(XY)
-            #ADEnFDE di cat brati di gabungkan seluruh listnya ex:56x17 sehingga semua keluar dan bisa di mean
             if torch.is_tensor(config.WORLD_SCALE) or config.WORLD_SCALE != 1:
                 if not torch.is_tensor(config.WORLD_SCALE):
                     config.WORLD_SCALE = torch.as_tensor(config.WORLD_SCALE, device=ADE.device, dtype=ADE.dtype)
@@ -315,7 +307,6 @@ if __name__ == "__main__":
             #if settings.prev_data!=None:
             #    realtraindata=mergepreviousdatatraining(realtraindata,prevtrainingdata,sample)
             lossarray=[]
-            #dapat semua data, nah sekarang tinggal ditambahkan ke real traindata cuyyy uhuyyy!!! tambahkan aja di dataloadnya biar sama kayak test, tapi nanti jadi tidak tercontrol
             nbatch=len(train_data)
             errindividuallist=[]
             klindividuallist=[]
@@ -335,14 +326,14 @@ if __name__ == "__main__":
                 #         #print("rise!!!")
                 #         item=mergepreviousdatatraining(item,prevtrainingdata)#harusnya diambil 20 persen jg dari batch nya, tapi sudah
                 #        # print("done!!")
-                res = model(*item)#ini returnnya err, kl , err itu selisih y sama y' cuman bukan loss total, model loss nya berbeda dengan err
+                res = model(*item)
                 free, total = torch.cuda.mem_get_info("cuda:0")
                 mem_used_MB = (total - free) / 1024 ** 2
                 #print('after model',mem_used_MB)
                 errindividual=res[0].mean(dim=(0,2))#ini loss per data, mean di ambil dari sample prediksi
                 klindividual=res[1].mean(dim=(0,2))
                 loss_err=errindividual+klindividual
-                loss = model.loss(*res)#err,kl di masukkan ke loss, dimana loss itu untuk 16 data per batch, jadi individual lossnya harus diambil dari res
+                loss = model.loss(*res)
                 lossarray.append([item,errindividual,klindividual])
                 #errindividuallist.append(errindividual)
                 #klindividuallist.append(klindividual)
@@ -355,7 +346,7 @@ if __name__ == "__main__":
                     if k not in losses: 
                         losses[k] = v.item()
                     else:
-                        losses[k] = (losses[k]*batch+v.item())/(batch+1)#ini akumulatif loss tiap batch untuk 1 epoch
+                        losses[k] = (losses[k]*batch+v.item())/(batch+1)
                         #cari average loss per datanya untuk kemudian dicari weightnya
                 sys.stdout.write(log_str.format(
                    cur_batch=batch+1, done="="*int((batch+1)*progress),
@@ -365,7 +356,7 @@ if __name__ == "__main__":
                 ))
                 ####calculate reducible loss score here!!!#####
                 #reducibleloss=ReducibleLoss()
-                losslist.append(losses['loss'])#ini loss per epochnya, dimana batch itu isinya berbeda2
+                losslist.append(losses['loss'])
                 #rl.updatebuffer(items,loss_err,taskno,idt)
             rng_state = get_rng_state(settings.device)
             
@@ -420,87 +411,7 @@ if __name__ == "__main__":
                 XYbest=[XY.copy(),ade_best,fde_best]
                 losslist=np.array(losslist)
                 meanloss=np.mean(losslist, dtype=np.float64)
-                #ka=10
-                #topk_unsorted_idx = np.argpartition(losslist, -ka)[-ka:]
-                # Step 2: Sort the top 5 values descending
-                #topk_sorted_idx = topk_unsorted_idx[np.argsort(losslist[topk_unsorted_idx])[::-1]]
-                #topk_values = losslist[topk_sorted_idx]
-                #losslist=topk_values
-                #lossarray=lossarray[topk_sorted_idx]
-                #lossbest=lossarray.copy()
-                #buat filter berdasarkan individual loss untuk loss arraynya
-                #filter berdasarkan mean loss tiap individunya, cek perhitungan losslistnya
-                finalloss=[]
-                finalADE=[]
-                finalFDE=[]
-                finalXY=[]
-                ######### select the validation data #########
-                # for i in range(len(XY)): 
-                #     maskADE=XY[i][3]<ade
-                #     adeindices=torch.nonzero(maskADE).squeeze()
-                #     temp=[XY[0][0][:,adeindices,:],XY[0][1][:,adeindices,:],XY[0][2][:,adeindices,:,:],XY[0][3][adeindices],XY[0][4][adeindices]]
-                #     if(i==0):
-                #         finalXY=temp
-                #     else:
-                #         if(adeindices.dim()==0):
-                #             lenade=1
-                #         else:
-                #             lenade=adeindices.size(0)
-                #         if(lenade==0):
-                #             continue
-                #         elif(lenade==1):
-                #             obvdata=temp[0].unsqueeze(1)
-                #             futdata=temp[1].unsqueeze(1)
-                #             neighbdata=temp[2].unsqueeze(1)
-                #             adedata=temp[3].unsqueeze(0)
-                #             fdedata=temp[4].unsqueeze(0)
-                #         else:
-                #             obvdata=temp[0]
-                #             futdata=temp[1]
-                #             neighbdata=temp[2]
-                #             adedata=temp[3]
-                #             fdedata=temp[4]
-                #         obvdata=torch.cat((finalXY[0],obvdata),dim=1)
-                #         futdata=torch.cat((finalXY[1],futdata),dim=1)
-                #         neighbdata=torch.cat((finalXY[2],neighbdata),dim=1)
-                #         adedata=torch.cat((finalXY[3],adedata),dim=0)
-                #         fdedata=torch.cat((finalXY[4],fdedata),dim=0)
-                #         finalXY=[obvdata,futdata,neighbdata,adedata,fdedata]
-                # XYbest=[finalXY.copy(),ade,fde]
-
-                # for i in range(len(lossarray)):
-                #      #ini digunakan untuk filter data training yang bagus dan yang enggak berdasarkan mean valuenya atau kalau saat ini msh menggunakan losslist-1
-                #     #print('loss individu',lossarray[i][1])[i for i, val in enumerate(arr) if val < 5]
-                #     lossfinal=lossarray[i][1]<losslist[-1]
-                #     lossindices = torch.nonzero(lossfinal).squeeze()
-                #     temp=[lossarray[i][0][0][:,lossindices,:], lossarray[i][0][1][:,lossindices,:], lossarray[i][0][2][:, lossindices,:,:],lossarray[i][1][lossindices],lossarray[i][2][lossindices]]
-                #     if(i==0):
-                #         finalloss=temp
-                #     else:
-                #         #t1_cat = torch.cat([t1a, t1b], dim=1) 
-                #         obv=torch.cat((finalloss[0],temp[0]),dim=1)
-                #         fut=torch.cat((finalloss[1],temp[1]),dim=1)
-                #         neighb=torch.cat((finalloss[2],temp[2]),dim=1)
-                #         yt=torch.cat((finalloss[3],temp[3]),dim=0)
-                #         ft=torch.cat((finalloss[4],temp[4]),dim=0)
-                #         finalloss=[obv,fut,neighb,yt,ft]                        
-                # lossbest=finalloss.copy()
-                #RLB=rl.buffer.copy()#coba cek bagian timingnya apakah sudah sesuai atau belum, perbaiki loss final juga untuk ngecek apakah mau pakai buffersize atau enggak
-                #a=0
-
-    # if train_data is not None:
-    #     bestaddressXY=os.path.join(settings.ckpt, "bestXY.pt") 
-    #     bestaddressloss=os.path.join(settings.ckpt, "bestloss.pt")
-
-    #     torch.save(XYbest, bestaddressXY)
-    #     torch.save(lossbest, bestaddressloss)
-        #XYprint=[]
-        # for rows in XYbest:
-        #     XYrow=[]
-        #     for row in rows:
-        #         XYrow.append(row.cpu().numpy())
-        #     XYprint.ap
-        # np.savetxt(bestaddress, XYbest, delimiter=",", fmt="%d")
+               
     if settings.fpc_finetune:# or losses is not None:
         # FPC finetune if it is specified or after training
         precision = 2
