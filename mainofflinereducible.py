@@ -119,8 +119,7 @@ if __name__ == "__main__":
         test_dataset= Dataloader(
             settings.test, **kwargs,inclusive_groups=inclusive,idtask=int(settings.taskno),
             batch_size=config.BATCH_SIZE, shuffle=False
-        )#disini tidak spesifik ditentukan batch per epochnya makanya di evaluasi semuanya
-        #sekarang tambahkan di data XY yang disimpan idtrack dan idtask, clusternya jg
+        )
         if settings.prev_data!=None:
             sample=int(settings.datacapacity)#iniiiii pentingggg!!!!
             allprevdata=loadallpreviousmemories(settings.prev_data)
@@ -130,9 +129,6 @@ if __name__ == "__main__":
                 filterpreviousdata.getRelData(prev_data[1],prev_data[0])
                 prevtestdata=filterpreviousdata.dataprevvalid
                 test_dataset=mergeprevioustestdataREL(test_dataset,prevtestdata)#brati prevtestdata isinya per scene
-                #coba langsung cek bagian ini lgs run di mainreducible dengan ditambahin bagian prev data
-            #test_dataset=test_dataset.extend(prevtestdata)
-            #harusnya ditambahkan ke test_data karena dah disampler, ternyta ga usah karena dipakai semua
         test_data = torch.utils.data.DataLoader(test_dataset, 
             collate_fn=test_dataset.collate_fn,
             batch_sampler=test_dataset.batch_sampler
@@ -180,11 +176,11 @@ if __name__ == "__main__":
                     ADE.append(ade)
                     FDE.append(fde)
                     xy_entry = [t.clone().cpu() if torch.is_tensor(t) else t for t in [x,y,neighbor,ade,fde,nclusters,id_track,id_tasks]]
-                    XY.append(xy_entry)#salahnya disini harusnya cuma 1 saja ini diambil 9
+                    XY.append(xy_entry)
             ADE = torch.cat(ADE)
             FDE = torch.cat(FDE)
             #XY=torch.cat(XY)
-            #ADEnFDE di cat brati di gabungkan seluruh listnya ex:56x17 sehingga semua keluar dan bisa di mean
+
             if torch.is_tensor(config.WORLD_SCALE) or config.WORLD_SCALE != 1:
                 if not torch.is_tensor(config.WORLD_SCALE):
                     config.WORLD_SCALE = torch.as_tensor(config.WORLD_SCALE, device=ADE.device, dtype=ADE.dtype)
@@ -215,11 +211,6 @@ if __name__ == "__main__":
             batch_size=config.BATCH_SIZE, shuffle=True, batches_per_epoch=config.EPOCH_BATCHES,idtask=int(settings.taskno)
         )
         batches = train_dataset.batches_per_epoch
-        #if settings.prev_data!=None:
-           # prev_data=
-            #prev_data=previousdata()
-            #prev_data = torch.load("/home/USER/Documents/projects/MIND_VAE/log_eth/testCL2050top10/longterm.pt")# check here
-          #  train_dataset=train_dataset.extend(prev_data)
         train_data= torch.utils.data.DataLoader(train_dataset,
             collate_fn=train_dataset.collate_fn,
             batch_sampler=train_dataset.batch_sampler
@@ -227,7 +218,7 @@ if __name__ == "__main__":
         if settings.prev_data!=None:
             #merge both train data and previous data
             #prevtrainingdata=prev_data[0].dataprevtrain
-            sample=int(settings.datacapacity)#iniiiii pentingggg!!!!
+            sample=int(settings.datacapacity)
             #test_dataset=mergepreviousdatatraining(train_data,prevtrainingdata,sample)
         #batches = train_dataset.batches_per_epoch
         max_memory_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
@@ -293,8 +284,6 @@ if __name__ == "__main__":
             max_outer_it=5, max_inner_it=5,
             weight_lr=settings.weight_lr, logging_period=1000,device=settings.device)
     def reducethetrainingdata(train_data,train_dataset):
-        # fungsi untuk mengurangi data training dengan cara mengevaluasi data training dengan model yang sudah diload,
-        # data training akan diseleksi dengan multinomial berdasarkan nilai akurasi yang diturunkan dari error test.
         if train_data is None:
             return None
 
@@ -309,7 +298,6 @@ if __name__ == "__main__":
         original_count = len(dataset)
         print(f"Reducing training data: keeping {keep_ratio * 100:.1f}% of {original_count} samples")
 
-        # Collect all error-based scores and track actual dataset indices
         all_scores = []
         all_dataset_indices = []  # Track which indices from the actual dataset were in the batches
         eps = 1e-8
@@ -428,7 +416,6 @@ if __name__ == "__main__":
             #if settings.prev_data!=None:
             #    realtraindata=mergepreviousdatatraining(realtraindata,prevtrainingdata,sample)
             lossarray=[]
-            #dapat semua data, nah sekarang tinggal ditambahkan ke real traindata cuyyy uhuyyy!!! tambahkan aja di dataloadnya biar sama kayak test, tapi nanti jadi tidak tercontrol
             nbatch=len(train_data)
             errindividuallist=[]
             klindividuallist=[]
@@ -454,16 +441,6 @@ if __name__ == "__main__":
                         ncluster=items[5]
                         idtask=items[-2]
                 
-                # if(epoch==end_epoch):#ini tentukan kapan training coresetnya
-                #     if(batch==0):
-                #         endtimebcsr=time.time()
-                #     print('start coreset selection for batch ',batch+1,'/',int(nbatch))
-                #     ids,loss,weights=bc.coreset_select(model, item, task_id=0,  topk=int(config.BATCH_SIZE*(int(settings.datacapacity)/100)),out_loss=[],idt=idtracks)
-                #     rng_state = get_rng_state(settings.device)
-                #     candidates_indices.append(ids.cpu().numpy())
-                #     item_cpu = tuple(t.clone().cpu() if torch.is_tensor(t) else t for t in item)
-                #     lastbatch.append([item_cpu,errindividual.clone().cpu(),klindividual.clone().cpu(),torch.as_tensor(idtracks, dtype=torch.int, device='cpu'),torch.as_tensor(ncluster, dtype=torch.double, device='cpu'),torch.as_tensor(idtask, dtype=torch.int, device='cpu'),weights.clone().cpu()])
-                #     #print('coreset selection done for batch',batch )
                 res = model(*item)#ini returnnya err, kl , err itu selisih y sama y' cuman bukan loss total, model loss nya berbeda dengan err
                 
                 free, total = torch.cuda.mem_get_info(settings.device)
@@ -487,7 +464,6 @@ if __name__ == "__main__":
                         losses[k] = v.item()
                     else:
                         losses[k] = (losses[k]*batch+v.item())/(batch+1)#ini akumulatif loss tiap batch untuk 1 epoch
-                        #cari average loss per datanya untuk kemudian dicari weightnya
                 sys.stdout.write(log_str.format(
                    cur_batch=batch+1, done="="*int((batch+1)*progress),
                    remain="."*(int(batches*progress)-int((batch+1)*progress)),
@@ -737,4 +713,3 @@ if __name__ == "__main__":
     print("total time main Only",endtimemain-start)
     print("total time reducible Loss:",endtimemainREL-endtimemain)
     print(f"Peak GPU memory allocated: {max_mem / 1024**2:.2f} MB")
-    ##berikutnya kerjakan multi tasknya yaa!!!!!
