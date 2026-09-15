@@ -123,8 +123,7 @@ if __name__ == "__main__":
         test_dataset= Dataloader(
             settings.test, **kwargs,inclusive_groups=inclusive,idtask=int(settings.taskno),
             batch_size=config.BATCH_SIZE, shuffle=False, kneighbour=config.MAX_NEIGHBORS
-        )#disini tidak spesifik ditentukan batch per epochnya makanya di evaluasi semuanya
-        #sekarang tambahkan di data XY yang disimpan idtrack dan idtask, clusternya jg
+        )
         if settings.prev_data!=None:
             sample=int(settings.datacapacity)#iniiiii pentingggg!!!!
             allprevdata=loadallpreviousmemories(settings.prev_data)
@@ -133,8 +132,7 @@ if __name__ == "__main__":
                 filterpreviousdata=previousdata(sample,settings.method)
                 filterpreviousdata.getProposedData(prev_data[1],prev_data[0])
                 prevtestdata=filterpreviousdata.dataprevvalid
-                test_dataset=mergeprevioustestdata(test_dataset,prevtestdata)#brati prevtestdata isinya per scene
-                #coba langsung cek bagian ini lgs run di mainreducible dengan ditambahin bagian prev data
+                test_dataset=mergeprevioustestdata(test_dataset,prevtestdata)
             #test_dataset=test_dataset.extend(prevtestdata)
             #harusnya ditambahkan ke test_data karena dah disampler, ternyta ga usah karena dipakai semua
         test_data = torch.utils.data.DataLoader(test_dataset, 
@@ -303,8 +301,6 @@ if __name__ == "__main__":
             weight_lr=settings.weight_lr, logging_period=1000,device=settings.device)
     lastbatch=[]
     def reducethetrainingdata(train_data,train_dataset):
-        # fungsi untuk mengurangi data training dengan cara mengevaluasi data training dengan model yang sudah diload,
-        # data training akan diseleksi dengan multinomial berdasarkan nilai akurasi yang diturunkan dari error test.
         if train_data is None:
             return None
 
@@ -438,7 +434,6 @@ if __name__ == "__main__":
             #if settings.prev_data!=None:
             #    realtraindata=mergepreviousdatatraining(realtraindata,prevtrainingdata,sample)
             lossarray=[]
-            #dapat semua data, nah sekarang tinggal ditambahkan ke real traindata cuyyy uhuyyy!!! tambahkan aja di dataloadnya biar sama kayak test, tapi nanti jadi tidak tercontrol
             nbatch=len(train_data)
             errindividuallist=[]
             klindividuallist=[]
@@ -518,7 +513,7 @@ if __name__ == "__main__":
                     del item_cpu
                     torch.cuda.empty_cache()
                     gc.collect()
-                losslist.append(losses['loss'])#ini loss per epochnya, dimana batch itu isinya berbeda2
+                losslist.append(losses['loss'])
                 #rl.updatebuffer(items,loss_err,settings.taskno,idtracks,batch,epoch)
                 sys.stdout.write(log_str.format(
                     cur_batch=batch+1, done="="*int((batch+1)*progress),
@@ -656,9 +651,9 @@ if __name__ == "__main__":
                         idtrajectory=torch.cat((finalXY[6],idtrajectory),dim=0)
                         idtask=torch.cat((finalXY[7],idtask),dim=0)
                         sample_count = adedata.shape[0]
-                        weightbcsr = torch.ones(sample_count, dtype=torch.float32, device=adedata.device) #buat weight bcsr bernilai 1 semua saja
-                        weightREL = torch.ones(sample_count, dtype=torch.float32, device=adedata.device) #buat weight REL bernilai 1 semua saja
-                        finalweight = torch.ones(sample_count, dtype=torch.float32, device=adedata.device) #buat weight final bernilai 1 semua saja
+                        weightbcsr = torch.ones(sample_count, dtype=torch.float32, device=adedata.device) 
+                        weightREL = torch.ones(sample_count, dtype=torch.float32, device=adedata.device) 
+                        finalweight = torch.ones(sample_count, dtype=torch.float32, device=adedata.device) 
                         finalXY=[obvdata,futdata,neighbdata,adedata,fdedata,clusterdata,idtrajectory,idtask,weightbcsr,weightREL,finalweight]
                 finalXY_cpu = [
                     t.detach().cpu().clone() if torch.is_tensor(t) else t
@@ -930,9 +925,9 @@ if __name__ == "__main__":
         if finalcand:
             eps = 1e-8
             # Keep all weighting components on one device to avoid cuda/cpu mixing at combine time.
-            #weightslast = torch.as_tensor(finalcand[9], dtype=torch.float32, device=settings.device)#weightslast itu loss diff yang diambil dari offline REL, dimana loss diff itu adalah selisih antara loss sebelum dan sesudah di update buffer, jadi semakin besar loss diff nya berarti semakin besar pengaruhnya terhadap model setelah di update buffer, jadi bisa dijadikan salah satu komponen untuk menentukan weightnya
-            weightbcsr = torch.as_tensor(finalcand[8], dtype=torch.float32, device=settings.device)#weightbcsr itu weight yang diambil dari BCSR, dimana weight itu adalah nilai yang menunjukkan seberapa pentingnya data tersebut untuk dipilih sebagai coreset, jadi semakin besar weightnya berarti semakin penting data tersebut untuk dipilih sebagai coreset, jadi bisa dijadikan salah satu komponen untuk menentukan weightnya
-            nc_comp = torch.as_tensor(finalcand[6][:,1], dtype=torch.float32, device=settings.device)#nc_comp itu ncluster future, dimana ncluster itu adalah hasil clustering dari data training, jadi semakin besar ncluster future nya berarti semakin unik data tersebut dibandingkan dengan data training lainnya, jadi bisa dijadikan salah satu komponen untuk menentukan weightnya
+            #weightslast = torch.as_tensor(finalcand[9], dtype=torch.float32, device=settings.device)
+            weightbcsr = torch.as_tensor(finalcand[8], dtype=torch.float32, device=settings.device)
+            nc_comp = torch.as_tensor(finalcand[6][:,1], dtype=torch.float32, device=settings.device)
             # Higher loss is worse, so invert: (max - value) / range
             #wl_norm = (weightslast.max() - weightslast) / (weightslast.max() - weightslast.min() + eps)
             wb_norm = (weightbcsr - weightbcsr.min()) / (weightbcsr.max() - weightbcsr.min() + eps)
@@ -940,8 +935,6 @@ if __name__ == "__main__":
             #wl_norm wb_norma dan nc_norm itu sudah dinormalisasi antara 0 dan 1, dimana 1 itu adalah yang paling penting untuk dipilih sebagai coreset, jadi bisa dijadikan salah satu komponen untuk menentukan weightnya
             finalweight = (wb_norm + nc_norm) / 2
             finalcand.append(finalweight)
-            #REL itu dasarnya adalah memilih data berdasarkan loss diff nya, dimana loss diff itu adalah selisih antara loss sebelum dan sesudah di update buffer, jadi semakin besar loss diff nya berarti semakin besar pengaruhnya terhadap model setelah di update buffer, jadi bisa dijadikan salah satu komponen untuk menentukan weightnya
-            #sementara BCSR itu dasarnya adalah memilih data berdasarkan weight yang dihasilkan dari proses coreset selection, dimana weight itu adalah nilai yang menunjukkan seberapa pentingnya data tersebut untuk dipilih sebagai coreset, jadi semakin besar weightnya berarti semakin penting data tersebut untuk dipilih sebagai coreset, jadi bisa dijadikan salah satu komponen untuk menentukan weightnya, weight itu dihitunh menggunakan gradient dari model terhadap data tersebut, jadi semakin besar gradientnya berarti semakin besar pengaruhnya terhadap model setelah di update buffer, jadi bisa dijadikan salah satu komponen untuk menentukan weightnya
             torch.cuda.empty_cache()
             # Select samples using multinomial sampling based on finalweight
             # Normalize finalweight to probability distribution
@@ -1017,4 +1010,3 @@ if __name__ == "__main__":
     print("ckpt-best time taken (s):",endtimemain-time_best)
     
     print(f"Peak GPU memory allocated: {max_mem / 1024**2:.2f} MB")
-    #cekdatacapacity!!!
