@@ -45,6 +45,7 @@ Open `mainContinual.py` and in the `main()` function uncomment the training meth
 - `BCSRexperienceReplay()` — BCSR replay method
 - `RELexperienceReplay()` — REL replay method
 - `ProposedexperienceReplay()` — MIND (proposed)
+- 'Proposedablation("mainablationnocluster.py")' - MIND abalation study for combination
 
 Then run:
 
