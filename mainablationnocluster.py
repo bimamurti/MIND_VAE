@@ -64,7 +64,6 @@ if __name__ == "__main__":
     time_start = time.time()
     print("Start time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time_start)))
     def loadallpreviousmemories(folder_path):
-        #mengambil data terakhir saja, karena data sebelumnya sudah di merge ke data training, jadi tidak perlu diambil lagi, cukup yang terakhir saja, tapi kalau mau diambil semua juga bisa, nanti tinggal di filter aja per scene nya
         alldata=[]
         #pathall=folder
         pathall=os.path.join(folder_path,"*")
@@ -303,8 +302,6 @@ if __name__ == "__main__":
             weight_lr=settings.weight_lr, logging_period=1000,device=settings.device)
     lastbatch=[]
     def reducethetrainingdata(train_data,train_dataset):
-        # fungsi untuk mengurangi data training dengan cara mengevaluasi data training dengan model yang sudah diload,
-        # data training akan diseleksi dengan multinomial berdasarkan nilai akurasi yang diturunkan dari error test.
         if train_data is None:
             return None
 
@@ -438,7 +435,6 @@ if __name__ == "__main__":
             #if settings.prev_data!=None:
             #    realtraindata=mergepreviousdatatraining(realtraindata,prevtrainingdata,sample)
             lossarray=[]
-            #dapat semua data, nah sekarang tinggal ditambahkan ke real traindata cuyyy uhuyyy!!! tambahkan aja di dataloadnya biar sama kayak test, tapi nanti jadi tidak tercontrol
             nbatch=len(train_data)
             errindividuallist=[]
             klindividuallist=[]
@@ -723,7 +719,6 @@ if __name__ == "__main__":
             max_mem=max_memtemp
         # Consume entries from the end so processed items can be freed immediately.
         loss_item = lossarray_rest.pop()
-        #ini digunakan untuk filter data training yang bagus dan yang enggak berdasarkan mean valuenya atau kalau saat ini msh menggunakan losslist-1
         #print('loss individu',lossarray[i][1])[i for i, val in enumerate(arr) if val < 5]
         #lossfinal=lossarray[i][1]<losslist[-1]
         #lossaray isinnya item,errindividual,klindividual,idtracks,ncluster,taskno
@@ -784,47 +779,7 @@ if __name__ == "__main__":
         print(f"Memory after lastbatch loop - RAM peak: {ram_mb:.2f} MiB; GPU allocated: {gpu_alloc_mb:.2f} MiB; GPU reserved: {gpu_reserved_mb:.2f} MiB; ")
     else:
         print(f"Memory after lastbatch loop - RAM peak: {ram_mb:.2f} MiB; GPU unavailable;")
-    # pass 1: total N
-    # total_n = 0
-    # for loss_item in lossarray:
-    #     total_n += loss_item[1].numel()  # or selected count after masking
-
-    # # infer dims from first item
-    # first = lossarray[-1]
-    # ob_h, _, ob_d = first[0][0].shape
-    # fu_h, _, fu_d = first[0][1].shape
-    # nb_h, _, nb_n, nb_d = first[0][2].shape
-
-    # # allocate once (CPU)
-    # obv_all = torch.empty((ob_h, total_n, ob_d), dtype=first[0][0].dtype)
-    # fut_all = torch.empty((fu_h, total_n, fu_d), dtype=first[0][1].dtype)
-    # nei_all = torch.empty((nb_h, total_n, nb_n, nb_d), dtype=first[0][2].dtype)
-    # yt_all  = torch.empty((total_n,), dtype=first[1].dtype)
-    # ft_all  = torch.empty((total_n,), dtype=first[2].dtype)
-    # idt_all = torch.empty((total_n,), dtype=first[3].dtype)
-    # ncl_all = torch.empty((total_n, first[4].shape[-1]), dtype=first[4].dtype)  # adjust if scalar
-    # tsk_all = torch.empty((total_n,), dtype=first[5].dtype)
-
-    # # pass 2: fill slices
-    # p = 0
-    # while lossarray:
-    #     loss_item = lossarray.pop()
-    #     lossfinal = torch.ones_like(loss_item[1], dtype=torch.bool)
-    #     idx = torch.nonzero(lossfinal).squeeze()
-    #     if idx.dim() == 0:
-    #         idx = idx.unsqueeze(0)
-    #     n = idx.numel()
-
-    #     obv_all[:, p:p+n, :] = loss_item[0][0][:, idx, :]
-    #     fut_all[:, p:p+n, :] = loss_item[0][1][:, idx, :]
-    #     nei_all[:, p:p+n, :, :] = loss_item[0][2][:, idx, :, :]
-    #     yt_all[p:p+n]  = loss_item[1][idx]
-    #     ft_all[p:p+n]  = loss_item[2][idx]
-    #     idt_all[p:p+n] = loss_item[3][idx]
-    #     ncl_all[p:p+n] = loss_item[4][idx]
-    #     tsk_all[p:p+n] = loss_item[5][idx]
-    #     p += n
-
+    
     # finalloss = [obv_all, fut_all, nei_all, yt_all, ft_all, idt_all, ncl_all, tsk_all]
     lossbest = finalloss_cpu
     print("run offline RE-L!")
@@ -977,15 +932,7 @@ if __name__ == "__main__":
         bestfinalloss=os.path.join(settings.ckpt, "bestlossfinal.pt")
         
         torch.save(candbest, bestaddresscandidate)
-        #torch.save(finalloss, bestfinalloss)
-        #torch.save(offline_REL.buffer, bestaddressRL)
-        #XYprint=[]
-        # for rows in XYbest:
-        #     XYrow=[]
-        #     for row in rows:
-        #         XYrow.append(row.cpu().numpy())
-        #     XYprint.ap
-        # np.savetxt(bestaddress, XYbest, delimiter=",", fmt="%d")
+
     if settings.fpc_finetune:# or losses is not None:
         # FPC finetune if it is specified or after training
         precision = 2
@@ -1016,4 +963,3 @@ if __name__ == "__main__":
     print("ckpt-best time taken (s):",endtimemain-time_best)
     
     print(f"Peak GPU memory allocated: {max_mem / 1024**2:.2f} MB")
-    #cekdatacapacity!!!
