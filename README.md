@@ -70,7 +70,7 @@ The data is not uploaded yet since it required big spaces, the data use the MOT 
 
 Appendix
 --------
-Additional experimental details are available in [ICRA27-Appendix.pdf](ICRA27-Appendix.pdf).
+Additional experimental details are available in [ICRA-27 appendix.pdf](<ICRA27-supplement appendix.pdf>)
 
 Project structure (key files)
 ----------------------------
