@@ -50,6 +50,8 @@ Open `mainContinual.py` and in the `main()` function uncomment the training meth
 Then run:
 
     python mainContinual.py
+To applied the dynamic clustering please refer to code from the main paper as preprocessing step, however this code can still run without dynamic clustering with runing MIND without cluster
+by running Proposedablation("mainablationnocluster.py")
 
 Evaluation
 ----------
